@@ -12,6 +12,7 @@ export class GetStatusResponseDTO {
   uuid: string;
   status: FaasStatus;
   language: FaasRuntime;
+  functionEndpoint?: string;
   createdAt: number;
 
   constructor(res: any) {
@@ -19,5 +20,8 @@ export class GetStatusResponseDTO {
     this.status = res.status;
     this.language = res.language;
     this.createdAt = res.createdAt;
+    if (res.functionEndpoint !== undefined) {
+      this.functionEndpoint = res.functionEndpoint;
+    }
   }
 }
