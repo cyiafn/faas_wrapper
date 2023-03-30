@@ -68,7 +68,7 @@ def lambda_handler(event, context):
                     'statusCode': 400,
                     'body': 'add_integration_method failed'
                 }
-           
+            print("add_integration_method executed successfully!")
             message_body= deploy_api()
             print(message_body)
             endpoint_url = (f'https://function.cyifan.dev/'
@@ -77,10 +77,10 @@ def lambda_handler(event, context):
             write_into_to_dynamo(uuid,'functionEndpoint',endpoint_url,False)
             response = write_into_to_dynamo(uuid,'status', 3,True)
             print("write to dynamo response: ",response)
-            return {
-                'statusCode': 200,
-                'body': message_body
-            }
+            # return {
+            #     'statusCode': 200,
+            #     'body': message_body
+            # }
     elif int(statusCode['N']) == 2:
         print("deleting")
         delete_lambda(uuid)
@@ -217,7 +217,7 @@ def create_new_lambda(uuid,function_runtime):
 def delete_api_method_and_integration(method_name):
     api_gateway = boto3.client('apigateway')
 
-    rest_api_id = 'we71vnmn60'
+    rest_api_id = 'ccekyz0yfh'
     resource_id = None
     response = api_gateway.get_resources(
         restApiId=rest_api_id,
@@ -258,8 +258,8 @@ def delete_api_method_and_integration(method_name):
 
 def add_rest_resource(resource_path):
     client = boto3.client('apigateway')
-    api_id = 'we71vnmn60'
-    parent_id = 'l1e9q3l49j'
+    api_id = 'ccekyz0yfh'
+    parent_id = '9ubmjx5jy2'
     #resource_path = 'usermethod'
     """
     Adds a resource to a REST API.
@@ -280,7 +280,7 @@ def add_rest_resource(resource_path):
         return resource_id 
     
 def add_integration_method(resource_id,FunctionArn):
-        api_id = 'we71vnmn60'
+        api_id = 'ccekyz0yfh'
         #resource_id = 'mmac1s'
         rest_method = 'POST'
         service_endpoint_prefix = 'lambda'
@@ -339,7 +339,7 @@ def add_integration_method(resource_id,FunctionArn):
                 type='AWS',
                 integrationHttpMethod='POST',
                 credentials=role_arn,
-                requestTemplates={'application/json': json.dumps(mapping_template)},
+                #requestTemplates={'application/json': json.dumps(mapping_template)},
                 uri = service_uri,
                 passthroughBehavior='WHEN_NO_TEMPLATES')
             client.put_integration_response(
@@ -359,7 +359,7 @@ def add_integration_method(resource_id,FunctionArn):
         return 200
 def deploy_api():
         client = boto3.client('apigateway')
-        api_id = 'we71vnmn60'
+        api_id = 'ccekyz0yfh'
         stage_name = 'default'
         """
         Deploys a REST API. After a REST API is deployed, it can be called from any
