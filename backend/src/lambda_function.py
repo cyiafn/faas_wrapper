@@ -70,6 +70,12 @@ def lambda_handler(event, context):
                 }
             print("add_integration_method executed successfully!")
             message_body= deploy_api()
+            if message_body is None:
+                write_into_to_dynamo(uuid,'status',4,True)
+                return {
+                    'statusCode': 400,
+                    'body': 'cannot deploy rest api method to stage'
+                }
             print(message_body)
             endpoint_url = (f'https://function.cyifan.dev/'
                             f'{uuid}')
@@ -201,18 +207,26 @@ def create_new_lambda(uuid,function_runtime):
     #function_runtime = 'python3.8'
     role_arn = 'arn:aws:iam::817231356792:role/User_Created_Lambda_Role'
 
-    response = client.create_function(
-        FunctionName=uuid,
-        Runtime=function_runtime,
-        Role=role_arn,
-        Handler=function_handler,
-        Code={
-        'S3Bucket': s3_bucket,
-        'S3Key': s3_key,
-    }
-    )
+    
+    try:
+        response = client.create_function(
+                        FunctionName=uuid,
+                        Runtime=function_runtime,
+                        Role=role_arn,
+                        Handler=function_handler,
+                        Code={
+                        'S3Bucket': s3_bucket,
+                        'S3Key': s3_key,
+                    }
+                    )
+    except ClientError:
+        
+        return None
+    else:
+        return response['FunctionArn']
     
     return response['FunctionArn']
+    
 
 def delete_api_method_and_integration(method_name):
     api_gateway = boto3.client('apigateway')
@@ -275,7 +289,7 @@ def add_rest_resource(resource_path):
         logger.info("Created resource %s.", resource_path)
     except ClientError:
         logger.exception("Couldn't create resource %s.", resource_path)
-        raise
+        return None
     else:
         return resource_id 
     
@@ -329,7 +343,7 @@ def add_integration_method(resource_id,FunctionArn):
         except ClientError:
             print(
                 "Couldn't create %s method for resource %s.", rest_method, resource_id)
-            raise
+            return 400
 
         try:
             client.put_integration(
@@ -355,7 +369,7 @@ def add_integration_method(resource_id,FunctionArn):
             print(
                 "Couldn't create integration for resource %s to service URI %s.",
                 resource_id, service_uri)
-            raise    
+            return 400    
         return 200
 def deploy_api():
         client = boto3.client('apigateway')
@@ -374,7 +388,7 @@ def deploy_api():
             print("Deployed stage %s.", stage_name)
         except ClientError:
             print("Couldn't deploy stage %s.", stage_name)
-            raise
+            return None
         return response
     
 def add_route_to_api_gateway():
